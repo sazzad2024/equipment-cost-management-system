@@ -236,17 +236,25 @@ secrets/
 .angular/
 
 # ============================================
-# OPTIONAL - Keep these if you want
+# LEARNING & DOCUMENTATION FILES
 # ============================================
 
-# Documentation files (keep these)
-# *.md
+# Learning documentation files (not needed to run project)
+FLOW_DOCUMENTATION.md
+PROJECT_FLOWCHART.md
+GIT_SECURITY_GUIDE.md
+all-confusing-parts-explained.md
+complete-application-flow.md
+database-check-explained.md
+database-connection-explained.md
+frontend-architecture-diagram.md
+frontend-backend-mapping.md
+login-code-for-kids.md
+login-flow-code-analysis.md
+middleware-explained.md
 
-# Keep package.json files
-# package.json
-
-# Keep README files
-# README.md
-# frontend/README.md
-# backend/README.md
+# Keep only essential README files
+# README.md (keep - needed for project setup)
+# frontend/README.md (keep if needed)
+# backend/README.md (keep if needed)
 

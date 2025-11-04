@@ -182,13 +182,26 @@ temp/
 # PROJECT SPECIFIC
 # ============================================
 
-# MongoDB connection scripts with credentials
-# Keep these scripts but ensure .env is ignored
-# fix-with-excel-values.js (can commit, but ensure .env is ignored)
-# remove-caterpillar-2025.js (can commit, but ensure .env is ignored)
+# One-off data migration/fix scripts (not needed to run project)
+check-excel-sheets.js
+convert-excel-to-json.js
+extract-2025-data.js
+fix-correct-decimal-values.js
+fix-with-exact-excel-values.js
+fix-with-excel-values.js
+remove-caterpillar-2025.js
+update-decimal-precision.js
 
-# Generated documentation (if auto-generated)
-# Keep manual docs like FLOW_DOCUMENTATION.md, PROJECT_FLOWCHART.md
+# Data files (may contain sensitive data or large files)
+tool-data.json
+
+# Temporary scripts in backend
+backend/clear-models.js
+backend/clear-saved-models.js
+backend/generate-all-years.js
+backend/upload-data.js
+backend/upload-fuel-data.js
+backend/test-server.js
 
 # ============================================
 # SECURITY

@@ -68,7 +68,10 @@ export class EquipmentListComponent {
     const map: { [category: string]: string[] } = {};
 
     for (const equipment of equipmentList) {
-      if (equipment.Category && equipment.Sub_Category) {
+      // Filter out Caterpillar equipment and categories named "Caterpillar"
+      if (equipment.Category && equipment.Sub_Category && 
+          (equipment as any).Manufacturer !== 'Caterpillar' && 
+          equipment.Category !== 'Caterpillar') {
         if (!map[equipment.Category]) {
           map[equipment.Category] = [];
         }
@@ -76,6 +79,11 @@ export class EquipmentListComponent {
           map[equipment.Category].push(equipment.Sub_Category);
         }
       }
+    }
+
+    // Sort subcategories alphabetically for each category
+    for (const category in map) {
+      map[category].sort();
     }
 
     return map;
@@ -92,15 +100,19 @@ export class EquipmentListComponent {
     this.selectedSubCategory = '';
     this.selectedSize = '';
   
-    // Update subcategories map based on selected category
+    // Update subcategories map based on selected category, excluding Caterpillar
     if (this.selectedCategory) {
       const filteredSubCategories = Array.from(
         new Set(
           this.equipmentList
-            .filter(equipment => equipment.Category === this.selectedCategory)
+            .filter((equipment: any) => 
+              equipment.Category === this.selectedCategory && 
+              equipment.Manufacturer !== 'Caterpillar' &&
+              equipment.Category !== 'Caterpillar'
+            )
             .map(equipment => equipment.Sub_Category)
         )
-      );
+      ).sort(); // Sort subcategories alphabetically
       this.subCategoriesMap[this.selectedCategory] = filteredSubCategories;
     }
   
@@ -130,9 +142,11 @@ export class EquipmentListComponent {
     if (this.selectedSubCategory) {
       const availableSizes = this.equipmentList
       .filter(
-        equipment =>
+        (equipment: any) =>
           equipment.Category === this.selectedCategory &&
-          equipment.Sub_Category === this.selectedSubCategory
+          equipment.Sub_Category === this.selectedSubCategory &&
+          equipment.Manufacturer !== 'Caterpillar' &&
+          equipment.Category !== 'Caterpillar'
       )
       .map(equipment => equipment.Size);
       this.sizesMap[this.selectedSubCategory] = [...new Set(availableSizes)];
@@ -144,7 +158,10 @@ export class EquipmentListComponent {
   
 
   getSubCategoryMapKeys(): string[] {
-    return Object.keys(this.subCategoriesMap);
+    // Filter out "Caterpillar" category if it exists
+    return Object.keys(this.subCategoriesMap)
+      .filter(category => category !== 'Caterpillar')
+      .sort();
   }
 
   
@@ -250,7 +267,8 @@ export class EquipmentListComponent {
     if (this.modelYear) {
       this.userService.getModelDataByYear(this.modelYear).subscribe(
         (response) => {
-          this.filteredEquipmentList = response.data;
+          // Filter out Caterpillar equipment
+          this.filteredEquipmentList = response.data.filter((equipment: any) => equipment.Manufacturer !== 'Caterpillar');
           this.spinnerOn = false;
         },
         (error) => {
@@ -264,7 +282,8 @@ export class EquipmentListComponent {
       this.userService.getModelDataByContractor(this.contractor).subscribe(
         (response) => {
         this.spinnerOn = false;
-        this.filteredEquipmentList = response.data;
+        // Filter out Caterpillar equipment
+        this.filteredEquipmentList = response.data.filter((equipment: any) => equipment.Manufacturer !== 'Caterpillar');
       },
       (error) => {
         this.spinnerOn = false;
@@ -280,7 +299,8 @@ export class EquipmentListComponent {
     this.spinnerOn = true;
     this.userService.getModelDataByYear(modelYear).subscribe(data => {
       this.spinnerOn = false;
-      this.equipmentList = data.data;
+      // Filter out Caterpillar equipment
+      this.equipmentList = data.data.filter((equipment: any) => equipment.Manufacturer !== 'Caterpillar');
       this.filteredEquipmentList = this.equipmentList;
 
       this.subCategories = Array.from(
@@ -296,7 +316,8 @@ export class EquipmentListComponent {
     this.spinnerOn = true;
     this.userService.getModelDataByContractor(contractor).subscribe(data => {
       this.spinnerOn = false;
-      this.equipmentList = data.data;
+      // Filter out Caterpillar equipment
+      this.equipmentList = data.data.filter((equipment: any) => equipment.Manufacturer !== 'Caterpillar');
       this.filteredEquipmentList = this.equipmentList;
 
       this.subCategories = Array.from(
@@ -357,18 +378,20 @@ export class EquipmentListComponent {
       subCategory.toLowerCase().includes(this.searchText.toLowerCase())
     );
 
-    // Filter equipment list based on selected sub-categories
+    // Filter equipment list based on selected sub-categories and exclude Caterpillar
     if (this.selectedSubCategories.length === 0) {
-      // No sub-categories selected, display all equipment
-      this.filteredEquipmentList = this.equipmentList.filter((equipment) =>
+      // No sub-categories selected, display all equipment (excluding Caterpillar)
+      this.filteredEquipmentList = this.equipmentList.filter((equipment: any) =>
+        equipment.Manufacturer !== 'Caterpillar' &&
         equipment.Sub_Category.toLowerCase().includes(
           this.searchText.toLowerCase()
         )
       );
     } else {
-      // Sub-categories selected, display filtered equipment based on sub-categories and search text
+      // Sub-categories selected, display filtered equipment based on sub-categories and search text (excluding Caterpillar)
       this.filteredEquipmentList = this.equipmentList.filter(
-        (equipment) =>
+        (equipment: any) =>
+          equipment.Manufacturer !== 'Caterpillar' &&
           this.selectedSubCategories.includes(equipment.Sub_Category || '') &&
           equipment.Sub_Category.toLowerCase().includes(
             this.searchText.toLowerCase()
@@ -384,8 +407,10 @@ export class EquipmentListComponent {
     // Reset pagination to first page
     this.currentPage = 1;
   
-    // Create a copy of the equipmentList
-    this.filteredEquipmentList = [...this.equipmentList];
+    // Create a copy of the equipmentList and filter out Caterpillar
+    this.filteredEquipmentList = this.equipmentList.filter(
+      (equipment: any) => equipment.Manufacturer !== 'Caterpillar'
+    );
   
     // Filter based on selected category
     if (this.selectedCategory) {

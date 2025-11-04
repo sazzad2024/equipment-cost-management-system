@@ -1,0 +1,47 @@
+<div class="container-fluid page">
+  <div class="d-flex page__box p-3 mt-2">Saved Models</div>
+  <div class="page__content shadow p-3">
+    <div class="filters">
+      <input class="form-control" placeholder="Quick search..." [(ngModel)]="searchText" (input)="applyFilters()" />
+      <div class="row mt-2">
+        <div class="col"><input class="form-control" placeholder="ID" [(ngModel)]="filterId" (input)="applyFilters()" /></div>
+        <div class="col"><input class="form-control" placeholder="Category" [(ngModel)]="filterCategory" (input)="applyFilters()" /></div>
+        <div class="col"><input class="form-control" placeholder="Subcategory" [(ngModel)]="filterSubcategory" (input)="applyFilters()" /></div>
+        <div class="col"><input class="form-control" placeholder="Size" [(ngModel)]="filterSize" (input)="applyFilters()" /></div>
+        <div class="col"><input class="form-control" placeholder="County" [(ngModel)]="filterCounty" (input)="applyFilters()" /></div>
+        <div class="col"><input class="form-control" placeholder="Quarter" [(ngModel)]="filterQuarter" (input)="applyFilters()" /></div>
+      </div>
+      <div class="mt-2">
+        <button class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+        <button class="btn btn-primary ml-2" (click)="print()">Print</button>
+      </div>
+    </div>
+
+    <div class="saved-models-table mt-3">
+      <div class="table-header">
+        <div class="table-cell">ID</div>
+        <div class="table-cell">Category</div>
+        <div class="table-cell">Subcategory</div>
+        <div class="table-cell">Size</div>
+        <div class="table-cell">Model Year</div>
+        <div class="table-cell">Fuel Type</div>
+        <div class="table-cell">County</div>
+        <div class="table-cell">Quarter</div>
+      </div>
+      <div *ngIf="filtered.length === 0" class="p-3">No saved models.</div>
+      <div *ngFor="let model of filtered" class="table-row clickable" (click)="navigateToEquipment(model)">
+        <div class="table-cell">{{ model.id }}</div>
+        <div class="table-cell">{{ model.category }}</div>
+        <div class="table-cell subcategory-cell">{{ model.subcategory }}</div>
+        <div class="table-cell">{{ model.size }}</div>
+        <div class="table-cell">{{ model.modelYear }}</div>
+        <div class="table-cell">{{ getFuelType(model.fueltype) }}</div>
+        <div class="table-cell">{{ model.county }}</div>
+        <div class="table-cell">{{ model.quarter }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

@@ -127,6 +127,7 @@ if (!this.equipment) {
     if (!this.equipment) {
       this.router.navigate(['/equipment-list']);
     } else {
+      this.formatDecimalFields();
       this.calculateDefaultValues();
     }
   }
@@ -162,6 +163,30 @@ if (!this.equipment) {
     const factor = 10 ** places;
     return Math.round(num * factor) / factor;
   };
+
+  private formatDecimalFields(): void {
+    if (this.equipment) {
+      // Format the 5 fields to 4 decimal places and trigger change detection
+      this.equipment.Sales_Tax = this.roundTo(this.equipment.Sales_Tax || 0, 4);
+      this.equipment.Salvage_Value = this.roundTo(this.equipment.Salvage_Value || 0, 4);
+      this.equipment.Annual_Overhead_rate = this.roundTo(this.equipment.Annual_Overhead_rate || 0, 4);
+      this.equipment.Annual_Overhaul_Parts_cost_rate = this.roundTo(this.equipment.Annual_Overhaul_Parts_cost_rate || 0, 4);
+      this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate = this.roundTo(this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate || 0, 4);
+      
+      // Also format the calculated field
+      this.totalAnnualRepairAndComponentRate = this.roundTo(this.totalAnnualRepairAndComponentRate || 0, 4);
+      
+      // Force Angular to detect changes by creating a new object reference
+      this.equipment = { ...this.equipment };
+      console.log('Formatted values:', {
+        Sales_Tax: this.equipment.Sales_Tax,
+        Salvage_Value: this.equipment.Salvage_Value,
+        Annual_Overhead_rate: this.equipment.Annual_Overhead_rate,
+        Annual_Overhaul_Parts_cost_rate: this.equipment.Annual_Overhaul_Parts_cost_rate,
+        Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate: this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate
+      });
+    }
+  }
 
   isEditable(field: string): boolean {
     // Admin can edit all fields
@@ -310,6 +335,8 @@ if (!this.equipment) {
           unadjustedRate: this.equipment.Total_ownership_cost_hourly,
           operCost: this.equipment.Total_operating_cost,
           selectedItem: JSON.stringify(this.equipment),
+          selectedCounty: this.selectedCounty,
+          selectedQuarter: this.selectedQuarter,
         },
       ]);
     } else if (btnType === 'view' && this.equipment) {
@@ -371,6 +398,194 @@ if (!this.equipment) {
         this.equipment.Total_cost_recovery =
         this.equipment.Total_ownership_cost_hourly +
         this.equipment.Total_operating_cost;
+    }
+  }
+
+  printEquipmentDetails(): void {
+    if (this.equipment) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Equipment Details - ${this.equipment.Category} - ${this.equipment.Sub_Category}</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                td { padding: 8px; border: 1px solid #ddd; }
+                td:first-child { font-weight: bold; background-color: #f8f9fa; width: 30%; }
+                .value-cell { font-weight: bold; color: #333; }
+                .costs-container { margin-top: 30px; }
+                .results td { background-color: #e9ecef; }
+                @media print { body { margin: 0; } }
+              </style>
+            </head>
+            <body>
+              <h2>Edit Equipment Details</h2>
+              <table>
+                <tr>
+                  <td>Category:</td>
+                  <td class="value-cell">${this.equipment.Category}</td>
+                  <td>Sub Category:</td>
+                  <td class="value-cell">${this.equipment.Sub_Category}</td>
+                </tr>
+                <tr>
+                  <td>Size:</td>
+                  <td class="value-cell">${this.equipment.Size}</td>
+                  <td>Fuel Type:</td>
+                  <td class="value-cell">${this.getFuelTypeText(this.equipment['Reimbursable Fuel_type (1 diesel, 2 gas, 3 other)'])}</td>
+                </tr>
+                <tr>
+                  <td>Selected County:</td>
+                  <td class="value-cell">${this.selectedCounty}</td>
+                  <td>Original Price:</td>
+                  <td class="value-cell">$${this.equipment.Original_price?.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td>Selected Quarter:</td>
+                  <td class="value-cell">${this.selectedQuarter}</td>
+                  <td>Fuel Price ($/gallon):</td>
+                  <td class="value-cell">$${this.selectedFuelUnitPrice?.toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td>Sales Tax:</td>
+                  <td class="value-cell">${(this.equipment.Sales_Tax || 0).toFixed(4)}</td>
+                  <td>Discount:</td>
+                  <td class="value-cell">${(this.equipment.Discount || 0).toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td>Salvage Value:</td>
+                  <td class="value-cell">${(this.equipment.Salvage_Value || 0).toFixed(4)}</td>
+                  <td>Annual Overhaul Labor Hours:</td>
+                  <td class="value-cell">${this.equipment.Annual_Overhaul_Labor_Hours}</td>
+                </tr>
+                <tr>
+                  <td>Annual Field Labor Hours:</td>
+                  <td class="value-cell">${this.equipment.Annual_Field_Labor_Hours}</td>
+                  <td>Cost Of A New Set Of Tires:</td>
+                  <td class="value-cell">$${this.equipment.Cost_of_A_New_Set_of_Tires?.toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td>Tire Life Hours:</td>
+                  <td class="value-cell">${this.equipment.Tire_Life_Hours}</td>
+                  <td>Hourly Lube Costs:</td>
+                  <td class="value-cell">$${(this.equipment.Hourly_Lube_Costs || 0).toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td>Hourly Wage:</td>
+                  <td class="value-cell">$${(this.equipment.Hourly_Wage || 0).toFixed(4)}</td>
+                  <td>Horsepower(fps):</td>
+                  <td class="value-cell">${this.equipment.Horse_power}</td>
+                </tr>
+                <tr>
+                  <td>Economic Life in months:</td>
+                  <td class="value-cell">${this.equipment.Economic_Life_in_months}</td>
+                  <td>Standard Monthly Use Hours:</td>
+                  <td class="value-cell">${this.equipment.Monthly_use_hours}</td>
+                </tr>
+                <tr>
+                  <td>Initial Freight cost:</td>
+                  <td class="value-cell">$${(this.equipment.Initial_Freight_cost || 0).toFixed(4)}</td>
+                  <td>Annual Overhead Rate Based On Resale Value:</td>
+                  <td class="value-cell">${(this.equipment.Annual_Overhead_rate || 0).toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td>Annual Overhaul Parts Cost Rate Of Original Price:</td>
+                  <td class="value-cell">${(this.equipment.Annual_Overhaul_Parts_cost_rate || 0).toFixed(4)}</td>
+                  <td>Annual Field Repair Parts:</td>
+                  <td class="value-cell">${(this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate || 0).toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td>Annual Ground Engaging Component rate:</td>
+                  <td class="value-cell">${(this.equipment.Annual_Ground_Engaging_Component_rate || 0).toFixed(4)}</td>
+                  <td>Cost of Capital rate:</td>
+                  <td class="value-cell">${(this.equipment.Cost_of_Capital_rate || 0).toFixed(4)}</td>
+                </tr>
+              </table>
+              
+              <h2>Calculated Costs</h2>
+              <div class="costs-container">
+                <table class="results">
+                  <tr>
+                    <td>Current Market Resale Value:</td>
+                    <td class="value-cell">$${this.equipment.Current_Market_Year_Resale_Value?.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td>Depreciation Ownership Cost (Monthly):</td>
+                    <td class="value-cell">$${(this.equipment.Depreciation_Ownership_cost_Monthly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Capital Cost (Monthly):</td>
+                    <td class="value-cell">$${(this.equipment.Cost_of_Facilities_Capital_Ownership_cost_Monthly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Overhead Ownership Cost (Monthly):</td>
+                    <td class="value-cell">$${(this.equipment.Overhead_Ownership_cost_Monthly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Overhaul Labor Ownership Cost (Monthly):</td>
+                    <td class="value-cell">$${(this.equipment.Overhaul_Labor_Ownership_cost_Monthly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Overhaul Parts Ownership Cost (Monthly):</td>
+                    <td class="value-cell">$${(this.equipment.Overhaul_Parts_Ownership_cost_Monthly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Total Ownership Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Total_ownership_cost_hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Field Labor Operating Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Field_Labor_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Field Parts Operating Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Field_Parts_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Ground Engaging Component Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Lube Operating Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Lube_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Fuel by Horse Power Operating Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Fuel_by_horse_power_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Tire Costs Operating Cost (Hourly):</td>
+                    <td class="value-cell">$${(this.equipment.Tire_Costs_Operating_cost_Hourly || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Total Operating Cost:</td>
+                    <td class="value-cell">$${(this.equipment.Total_operating_cost || 0).toFixed(4)}</td>
+                  </tr>
+                  <tr>
+                    <td>Total Cost Recovery:</td>
+                    <td class="value-cell">$${(this.equipment.Total_cost_recovery || 0).toFixed(4)}</td>
+                  </tr>
+                </table>
+              </div>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }
+    }
+  }
+
+  private getFuelTypeText(fuelType: number): string {
+    switch (fuelType) {
+      case 1: return 'Diesel';
+      case 2: return 'Gas';
+      case 3: return 'Other';
+      default: return 'Unknown';
     }
   }
 }

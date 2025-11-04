@@ -11,6 +11,9 @@
       <li *ngIf="isLoggedIn && this.showAdminBoard" class="nav-item">
         <a  (click)="navigateTo('/manage-equipment-data')" class="nav-link" routerLink="manage-equipment-data">Manage Equipment Data</a>
       </li>
+      <li *ngIf="isLoggedIn" class="nav-item">
+        <a routerLink="/saved-models" class="nav-link" routerLink="saved-models">Saved Models</a>
+      </li>
     </ul>
 
     <ul class="navbar-nav ml-auto" *ngIf="!isLoggedIn">

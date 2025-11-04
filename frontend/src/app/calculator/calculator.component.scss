@@ -7,6 +7,28 @@
       background: #1e293b;
       margin: 0 -1rem;
       font-size: 36px;
+      
+      .print-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+        
+        &:hover {
+          background-color: #0056b3;
+        }
+        
+        i {
+          font-size: 16px;
+        }
+      }
     }
     &__content {
       min-height: calc(100vh - 178px);

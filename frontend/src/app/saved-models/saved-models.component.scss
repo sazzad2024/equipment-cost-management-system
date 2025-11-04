@@ -1,0 +1,35 @@
+.saved-models-table {
+  display: grid;
+}
+.table-header, .table-row {
+  display: grid;
+  grid-template-columns: 150px 150px 200px 120px 100px 100px 120px 140px;
+  gap: 15px;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+}
+.table-header {
+  font-weight: 700;
+  background: #f8f9fa;
+}
+.table-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subcategory-cell {
+  white-space: normal !important;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.table-row.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.table-row.clickable:hover {
+  background-color: #f0f8ff;
+}
+.filters .row .col { padding-right: 8px; }
+
+

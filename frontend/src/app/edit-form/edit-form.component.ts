@@ -52,7 +52,7 @@ export class EditFormComponent {
   }
 
   getCategories(): string[] {
-    return Object.keys(this.subCategoriesMap);
+    return Object.keys(this.subCategoriesMap).sort();
   }
 
   onCategoryChange() {

@@ -18,7 +18,7 @@ exports.moderatorBoard = (req, res) => {
 };
 
 exports.saveModel = async (req, res) => {
-  const { category, modelYear, size, subcategory, fueltype, equipment } = req.body;
+  const { id, county, quarter, category, modelYear, size, subcategory, fueltype, equipment } = req.body;
   const userId = req.userId;
 
   try {
@@ -27,8 +27,8 @@ exports.saveModel = async (req, res) => {
       return res.status(404).send({ message: "User not found." });
     }
 
-    // Add the model information to the user's savedModels array
-    const modelData = JSON.stringify({ category, modelYear, size, subcategory, fueltype, equipment });
+  // Add the model information to the user's savedModels array (include id/county/quarter when present)
+  const modelData = JSON.stringify({ id, county, quarter, category, modelYear, size, subcategory, fueltype, equipment });
     user.savedModels.push(modelData);
 
     // Save the updated user document

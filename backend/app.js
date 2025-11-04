@@ -11,7 +11,12 @@ const path = __dirname + '/app/views/';
 app.use(express.static(path));
 
 const corsOptions = {
-  origin: ["http://localhost:4200", "https://idot-project-beta.vercel.app"],
+  origin: [
+    "http://localhost:4200",
+    "https://idot-project-beta.vercel.app",
+    "http://idot-frontend-1758593939.s3-website-us-east-1.amazonaws.com",
+    "https://dj42lwp4p3ce5.cloudfront.net"
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
@@ -44,7 +49,7 @@ db.mongoose
   })
   .catch(err => {
     console.error("Connection error", err);
-    process.exit();
+    // Do not exit; allow the app to keep serving while DB is unavailable
   });
 
 require("./app/routes/auth.routes")(app);
@@ -57,9 +62,9 @@ async function initial() {
   const count = await Role.estimatedDocumentCount();
   if (count === 0) {
     console.log("Initializing roles...");
-    await new db.Role({ name: "user" }).save();
-    await new db.Role({ name: "moderator" }).save();
-    await new db.Role({ name: "admin" }).save();
+    await new Role({ name: "user" }).save();
+    await new Role({ name: "moderator" }).save();
+    await new Role({ name: "admin" }).save();
     console.log("Roles initialized.");
   }
 }

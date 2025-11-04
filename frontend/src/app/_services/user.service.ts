@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Equipment } from '../board-admin/board-admin.component';
 import { StorageService } from './storage.service';
 
-const API_URL = 'https://idot-project-backend.onrender.com/api/test/';
+const API_URL = 'http://13.220.51.254:8083/api/test/';
 //const API_URL = 'http://localhost:8083/api/test/';
 
 

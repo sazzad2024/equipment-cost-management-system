@@ -36,6 +36,7 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { NotificationComponent } from './notification/notification.component';
 import { FuelQuarterSelectionComponent } from './fuel-quarter-selection/fuel-quarter-selection.component';
 import { CountySelectionComponent } from './county-selection/county-selection.component';
+import { SavedModelsComponent } from './saved-models/saved-models.component';
 
 @NgModule({
   declarations: [
@@ -61,6 +62,7 @@ import { CountySelectionComponent } from './county-selection/county-selection.co
     NotificationComponent,
     FuelQuarterSelectionComponent,
     CountySelectionComponent
+    ,SavedModelsComponent
   ],
   imports: [
     BrowserModule,

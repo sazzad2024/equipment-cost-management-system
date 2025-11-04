@@ -13,13 +13,13 @@ export interface Notification {
   styleUrls: ['./notification.component.scss'],
   animations: [
     trigger('slideInOut', [
-      state('in', style({ transform: 'translateY(0%)' })),
+      state('in', style({ transform: 'translateX(-50%) translateY(0%)' })),
       transition(':enter', [
-        style({ transform: 'translateY(-100%)' }),
-        animate('300ms ease-in-out', style({ transform: 'translateY(0%)' }))
+        style({ transform: 'translateX(-50%) translateY(100%)', opacity: 0 }),
+        animate('300ms ease-out', style({ transform: 'translateX(-50%) translateY(0%)', opacity: 1 }))
       ]),
       transition(':leave', [
-        animate('300ms ease-in-out', style({ transform: 'translateY(-100%)' }))
+        animate('300ms ease-in', style({ transform: 'translateX(-50%) translateY(100%)', opacity: 0 }))
       ])
     ])
   ]

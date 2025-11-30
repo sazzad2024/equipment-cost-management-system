@@ -618,7 +618,20 @@ exports.getModelDataByYear = async (req, res) => {
   const year = req.params.year;
 
   try {
-    const data = await mongoose.connection.db.collection(year).find({}).toArray();
+    const collectionName = year;
+    console.log(`📊 Querying collection: "${collectionName}"`);
+    const data = await mongoose.connection.db.collection(collectionName).find({}).toArray();
+    
+    // Log a sample record to verify values
+    if (data.length > 0) {
+      const sample = data.find(r => r.Category === 'Aerial Lifts' && r.Size === '31 - 40 ft');
+      if (sample) {
+        console.log(`🔍 Sample record from collection "${collectionName}":`);
+        console.log(`   Sales_Tax: ${sample.Sales_Tax} (type: ${typeof sample.Sales_Tax})`);
+        console.log(`   Salvage_Value: ${sample.Salvage_Value} (type: ${typeof sample.Salvage_Value})`);
+      }
+    }
+    
     res.status(200).send({ year: year, data: data });
   } catch (err) {
     console.error(`Error fetching model data for year ${year}:`, err);

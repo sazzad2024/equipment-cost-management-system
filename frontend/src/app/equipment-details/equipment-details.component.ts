@@ -127,8 +127,35 @@ if (!this.equipment) {
     if (!this.equipment) {
       this.router.navigate(['/equipment-list']);
     } else {
+      // Log the raw equipment data BEFORE any processing
+      console.log('🔍 RAW equipment data from API:', {
+        Category: this.equipment.Category,
+        Sub_Category: this.equipment.Sub_Category,
+        Size: this.equipment.Size,
+        Sales_Tax: this.equipment.Sales_Tax,
+        Sales_Tax_type: typeof this.equipment.Sales_Tax,
+        Sales_Tax_string: String(this.equipment.Sales_Tax),
+        Salvage_Value: this.equipment.Salvage_Value,
+        Salvage_Value_type: typeof this.equipment.Salvage_Value,
+        Salvage_Value_string: String(this.equipment.Salvage_Value),
+        Annual_Overhead_rate: this.equipment.Annual_Overhead_rate,
+        Annual_Overhaul_Parts_cost_rate: this.equipment.Annual_Overhaul_Parts_cost_rate
+      });
+      
       this.formatDecimalFields();
-      this.calculateDefaultValues();
+      
+      // Log AFTER formatDecimalFields
+      console.log('🔍 AFTER formatDecimalFields:', {
+        Sales_Tax: this.equipment.Sales_Tax,
+        Sales_Tax_string: String(this.equipment.Sales_Tax),
+        Salvage_Value: this.equipment.Salvage_Value,
+        Salvage_Value_string: String(this.equipment.Salvage_Value)
+      });
+      
+      // Only recalculate if calculated fields are missing, otherwise preserve DB values
+      if (!this.equipment.Depreciation_Ownership_cost_Monthly && !this.equipment.Total_ownership_cost_hourly) {
+        this.calculateDefaultValues();
+      }
     }
   }
   
@@ -159,32 +186,60 @@ if (!this.equipment) {
   
 
 
-  private roundTo = function (num: number, places: number) {
+  private roundTo = (num: number, places: number) => {
     const factor = 10 ** places;
     return Math.round(num * factor) / factor;
   };
 
+  private toFourDecimals(value: number | null | undefined): number {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 0;
+    }
+    return Number(value.toFixed(4));
+  }
+
+  formatForDisplay(value: number | null | undefined): string {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0.0000';
+    }
+    return value.toFixed(4);
+  }
+
+  parseFromDisplay(value: string): number {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : this.toFourDecimals(parsed);
+  }
+
   private formatDecimalFields(): void {
     if (this.equipment) {
-      // Format the 5 fields to 4 decimal places and trigger change detection
-      this.equipment.Sales_Tax = this.roundTo(this.equipment.Sales_Tax || 0, 4);
-      this.equipment.Salvage_Value = this.roundTo(this.equipment.Salvage_Value || 0, 4);
-      this.equipment.Annual_Overhead_rate = this.roundTo(this.equipment.Annual_Overhead_rate || 0, 4);
-      this.equipment.Annual_Overhaul_Parts_cost_rate = this.roundTo(this.equipment.Annual_Overhaul_Parts_cost_rate || 0, 4);
-      this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate = this.roundTo(this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate || 0, 4);
+      // DON'T round values - just ensure they're numbers
+      // The formatForDisplay() method in the template will handle the 4-decimal formatting
+      // This preserves the exact precision from the database
+      const numericFields = [
+        'Sales_Tax', 'Discount', 'Salvage_Value', 'Annual_Overhead_rate',
+        'Annual_Overhaul_Parts_cost_rate', 'Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate',
+        'Annual_Ground_Engaging_Component_rate', 'Cost_of_Capital_rate',
+        'Usage_rate', 'Initial_Freight_cost', 'Hourly_Lube_Costs',
+        'Depreciation_Ownership_cost_Monthly', 'Cost_of_Facilities_Capital_Ownership_cost_Monthly',
+        'Overhead_Ownership_cost_Monthly', 'Overhaul_Labor_Ownership_cost_Monthly',
+        'Overhaul_Parts_Ownership_cost_Monthly', 'Total_ownership_cost_hourly',
+        'Field_Labor_Operating_cost_Hourly', 'Field_Parts_Operating_cost_Hourly',
+        'Ground_Engaging_Component_Cost_Operating_cost_Hourly', 'Lube_Operating_cost_Hourly',
+        'Fuel_by_horse_power_Operating_cost_Hourly', 'Tire_Costs_Operating_cost_Hourly',
+        'Total_operating_cost', 'Total_cost_recovery'
+      ];
       
-      // Also format the calculated field
-      this.totalAnnualRepairAndComponentRate = this.roundTo(this.totalAnnualRepairAndComponentRate || 0, 4);
+      // Only convert to number if it's not already, but don't round
+      numericFields.forEach(field => {
+        if (this.equipment && (this.equipment as any)[field] !== undefined && (this.equipment as any)[field] !== null) {
+          const value = (this.equipment as any)[field];
+          // Preserve the exact value, just ensure it's a number
+          (this.equipment as any)[field] = typeof value === 'number' ? value : Number(value);
+        }
+      });
       
       // Force Angular to detect changes by creating a new object reference
       this.equipment = { ...this.equipment };
-      console.log('Formatted values:', {
-        Sales_Tax: this.equipment.Sales_Tax,
-        Salvage_Value: this.equipment.Salvage_Value,
-        Annual_Overhead_rate: this.equipment.Annual_Overhead_rate,
-        Annual_Overhaul_Parts_cost_rate: this.equipment.Annual_Overhaul_Parts_cost_rate,
-        Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate: this.equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate
-      });
     }
   }
 
@@ -229,7 +284,8 @@ if (!this.equipment) {
 
         //this.selectedFuelType = '1';
         //this.equipment.Usage_rate = Number(Number((this.equipment.Monthly_use_hours / 176)).toFixed(3));
-        this.equipment.Depreciation_Ownership_cost_Monthly =
+        this.equipment.Usage_rate = this.toFourDecimals(this.equipment.Monthly_use_hours / 176);
+        this.equipment.Depreciation_Ownership_cost_Monthly = this.toFourDecimals(
           (this.equipment.Original_price *
             (1 + this.equipment.Sales_Tax) *
             (1 - this.equipment.Discount) *
@@ -237,90 +293,103 @@ if (!this.equipment) {
             this.equipment.Initial_Freight_cost *
               this.equipment.Original_price) /
           this.equipment.Economic_Life_in_months /
-          this.equipment.Usage_rate;
-        this.equipment.Cost_of_Facilities_Capital_Ownership_cost_Monthly =
+          this.equipment.Usage_rate
+        );
+        this.equipment.Cost_of_Facilities_Capital_Ownership_cost_Monthly = this.toFourDecimals(
           (this.equipment.Cost_of_Capital_rate *
             this.equipment.Original_price) /
           12 /
-          this.equipment.Usage_rate;
+          this.equipment.Usage_rate
+        );
 
-        this.equipment.Overhead_Ownership_cost_Monthly =
+        this.equipment.Overhead_Ownership_cost_Monthly = this.toFourDecimals(
           (this.equipment.Annual_Overhead_rate *
             this.equipment.Current_Market_Year_Resale_Value) /
           12 /
-          this.equipment.Usage_rate;
+          this.equipment.Usage_rate
+        );
 
-        this.equipment.Overhaul_Labor_Ownership_cost_Monthly =
+        this.equipment.Overhaul_Labor_Ownership_cost_Monthly = this.toFourDecimals(
           (this.equipment.Hourly_Wage *
             this.equipment.Annual_Overhaul_Labor_Hours) /
           12 /
-          this.equipment.Usage_rate;
+          this.equipment.Usage_rate
+        );
 
-        this.equipment.Overhaul_Parts_Ownership_cost_Monthly =
+        this.equipment.Overhaul_Parts_Ownership_cost_Monthly = this.toFourDecimals(
           (this.equipment.Annual_Overhaul_Parts_cost_rate *
             this.equipment.Original_price) /
           12 /
-          this.equipment.Usage_rate;
+          this.equipment.Usage_rate
+        );
 
-        this.equipment.Total_ownership_cost_hourly =
+        this.equipment.Total_ownership_cost_hourly = this.toFourDecimals(
           (this.equipment.Depreciation_Ownership_cost_Monthly +
             this.equipment.Cost_of_Facilities_Capital_Ownership_cost_Monthly +
             this.equipment.Overhead_Ownership_cost_Monthly +
             this.equipment.Overhaul_Labor_Ownership_cost_Monthly +
             this.equipment.Overhaul_Parts_Ownership_cost_Monthly) /
-          176;
+          176
+        );
         //operating cost
 
         this.totalAnnualRepairAndComponentRate =
           (this.equipment
             .Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate || 0) +
           (this.equipment.Annual_Ground_Engaging_Component_rate || 0);
-        this.equipment.Field_Labor_Operating_cost_Hourly =
+        this.equipment.Field_Labor_Operating_cost_Hourly = this.toFourDecimals(
           (this.equipment.Annual_Field_Labor_Hours *
             this.equipment.Hourly_Wage) /
           12 /
-          this.equipment.Monthly_use_hours;
-        this.equipment.Field_Parts_Operating_cost_Hourly =
+          this.equipment.Monthly_use_hours
+        );
+        this.equipment.Field_Parts_Operating_cost_Hourly = this.toFourDecimals(
           (this.equipment
             .Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate *
             this.equipment.Original_price) /
           12 /
-          this.equipment.Monthly_use_hours;
-        this.equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly =
+          this.equipment.Monthly_use_hours
+        );
+        this.equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly = this.toFourDecimals(
           (this.equipment.Annual_Ground_Engaging_Component_rate *
             this.equipment.Original_price) /
           12 /
-          this.equipment.Monthly_use_hours;
+          this.equipment.Monthly_use_hours
+        );
 
 
 
-        this.equipment.Fuel_by_horse_power_Operating_cost_Hourly =
+        this.equipment.Fuel_by_horse_power_Operating_cost_Hourly = this.toFourDecimals(
           (Number(this.selectedFuelType) === 1
             ? 0.04
             : Number(this.selectedFuelType) === 2
             ? 0.06
             : 0) *
           this.equipment.Horse_power *
-          this.equipment.Fuel_unit_price;
+          this.equipment.Fuel_unit_price
+        );
         
 
 
-        this.equipment.Tire_Costs_Operating_cost_Hourly =
+        this.equipment.Tire_Costs_Operating_cost_Hourly = this.toFourDecimals(
           this.equipment.Tire_Life_Hours === 0
             ? 0
             : this.equipment.Cost_of_A_New_Set_of_Tires /
-              this.equipment.Tire_Life_Hours;
+              this.equipment.Tire_Life_Hours
+        );
 
-        this.equipment.Total_operating_cost =
+        this.equipment.Total_operating_cost = this.toFourDecimals(
           this.equipment.Field_Labor_Operating_cost_Hourly +
           this.equipment.Field_Parts_Operating_cost_Hourly +
           this.equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly +
           this.equipment.Lube_Operating_cost_Hourly +
           this.equipment.Fuel_by_horse_power_Operating_cost_Hourly +
-          this.equipment.Tire_Costs_Operating_cost_Hourly;
-        this.equipment.Total_cost_recovery =
+          this.equipment.Tire_Costs_Operating_cost_Hourly
+        );
+        this.equipment.Total_cost_recovery = this.toFourDecimals(
           this.equipment.Total_ownership_cost_hourly +
-          this.equipment.Total_operating_cost;
+          this.equipment.Total_operating_cost
+        );
         console.log(this.equipment);
       }
     }
@@ -369,14 +438,17 @@ if (!this.equipment) {
   
   private calculateFuelCost(): void {
     if (this.equipment) {
-      this.equipment.Fuel_by_horse_power_Operating_cost_Hourly =
+      const fuelCost =
         (Number(this.selectedFuelType) === 1
           ? 0.04
           : Number(this.selectedFuelType) === 2
           ? 0.06
           : 0) *
         this.selectedFuelUnitPrice *
-        this.equipment.Horse_power * this.equipment['Adjustment for fuel cost'];
+        this.equipment.Horse_power *
+        this.equipment['Adjustment for fuel cost'];
+
+      this.equipment.Fuel_by_horse_power_Operating_cost_Hourly = this.toFourDecimals(fuelCost);
 
       // Manually trigger change detection after updating
       this.cdr.detectChanges();
@@ -387,17 +459,19 @@ if (!this.equipment) {
   private calculateTotalOperatingCost(): void {
     if (this.equipment) {
       this.calculateFuelCost();
-      this.equipment.Total_operating_cost =
+      this.equipment.Total_operating_cost = this.toFourDecimals(
         this.equipment.Field_Labor_Operating_cost_Hourly +
         this.equipment.Field_Parts_Operating_cost_Hourly +
         this.equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly +
         this.equipment.Lube_Operating_cost_Hourly +
         this.equipment.Fuel_by_horse_power_Operating_cost_Hourly +
-        this.equipment.Tire_Costs_Operating_cost_Hourly;
+        this.equipment.Tire_Costs_Operating_cost_Hourly
+      );
 
-        this.equipment.Total_cost_recovery =
+      this.equipment.Total_cost_recovery = this.toFourDecimals(
         this.equipment.Total_ownership_cost_hourly +
-        this.equipment.Total_operating_cost;
+        this.equipment.Total_operating_cost
+      );
     }
   }
 

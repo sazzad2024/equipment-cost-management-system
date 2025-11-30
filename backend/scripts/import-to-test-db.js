@@ -2,8 +2,12 @@ const path = require('path');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
 
-// Use the TEST database (same as EC2 uses)
-const MONGODB_URI = 'mongodb+srv://alamakmsazzadul_db_user:jybG7nHWYVPbcuic@idot-project.kvjtojk.mongodb.net/test';
+// Load MongoDB URI from backend/.env instead of hardcoding credentials
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is not defined. Add it to backend/.env before running this script.');
+}
 
 const EXCEL_PATH = path.resolve(__dirname, '..', '..', 'Tool without 2026 Aug 9.xlsx');
 const COLLECTION_PREFIX = process.env.COLLECTION_PREFIX || '';

@@ -191,6 +191,8 @@ fix-with-exact-excel-values.js
 fix-with-excel-values.js
 remove-caterpillar-2025.js
 update-decimal-precision.js
+check-db-values.js
+check-excel-values.js
 
 # Data files (may contain sensitive data or large files)
 tool-data.json

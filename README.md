@@ -64,12 +64,6 @@ npm start
 ### 4. Access the Application
 Open browser: **http://localhost:4200**
 
-Default login credentials:
-| Username | Password | Role |
-|----------|----------|------|
-| admin | admin123 | Administrator |
-| idot | idot123 | Regular User |
-
 ## Project Structure
 
 ```
@@ -175,10 +169,6 @@ lsof -ti:4200 | xargs kill -9
 rm -rf node_modules
 npm install
 ```
-
-## Detailed Setup Guide
-
-See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for comprehensive setup instructions.
 
 ## License
 

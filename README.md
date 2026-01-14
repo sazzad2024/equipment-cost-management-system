@@ -2,7 +2,7 @@
 
 A comprehensive web application for calculating equipment ownership and operating costs, including FHWA (Federal Highway Administration) rates and standby rates for construction equipment.
 
-## 🚀 Features
+## Features
 
 - **Equipment Cost Calculator**: Calculate FHWA hourly rates and standby rates based on equipment specifications
 - **Equipment Management**: Manage equipment data by year and contractor
@@ -13,245 +13,177 @@ A comprehensive web application for calculating equipment ownership and operatin
 - **Saved Models**: Save and retrieve calculator models for future reference
 - **Print Functionality**: Print equipment details and calculator results
 
-## 🏗️ Architecture
+## Technology Stack
 
-- **Frontend**: Angular 15 with TypeScript
-- **Backend**: Node.js with Express.js
-- **Database**: MongoDB Atlas
-- **Authentication**: JWT tokens with HttpOnly cookies
-- **Deployment**: 
-  - Frontend: AWS S3 + CloudFront CDN
-  - Backend: AWS EC2
+| Layer | Technology |
+|-------|------------|
+| Frontend | Angular 15, TypeScript, SCSS, Angular Material |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas |
+| Authentication | JWT (JSON Web Tokens) |
 
-## 📋 Prerequisites
+## Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB instance)
-- Angular CLI (installed as dependency)
+- Node.js (v18 or higher)
+- npm (comes with Node.js)
+- MongoDB Atlas account (free tier available)
 
-## 🛠️ Installation
+## Quick Start
 
-### Backend Setup
-
-1. Navigate to backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create `.env` file:
-   ```env
-   MONGODB_URI=your_mongodb_connection_string
-   COOKIE_SECRET=your_cookie_secret
-   PORT=8083
-   NODE_ENV=development
-   ```
-
-4. Start the server:
-   ```bash
-   npm start
-   # Or for development with auto-reload:
-   npm run dev
-   ```
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Update API URLs in `src/app/_services/`:
-   - `user.service.ts`: Set `API_URL` to your backend URL
-   - `auth.service.ts`: Set `AUTH_API` to your backend URL
-   - `fuel-price.service.ts`: Set `API_URL` to your backend URL
-
-4. Start development server:
-   ```bash
-   npm start
-   # Or:
-   ng serve
-   ```
-
-5. Open browser:
-   ```
-   http://localhost:4200
-   ```
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the `backend` directory with:
-
-```env
-# MongoDB Connection URI
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
-
-# Cookie Secret for session encryption
-COOKIE_SECRET=your_random_secret_string
-
-# Port (optional - defaults to 8083)
-PORT=8083
-
-# Node Environment
-NODE_ENV=development
+### 1. Clone the repository
+```bash
+git clone https://github.com/sazzad2024/equipment-cost-management-system.git
+cd equipment-cost-management-system
 ```
 
-## 📁 Project Structure
+### 2. Set up Backend
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file in the `backend/` folder:
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/test
+COOKIE_SECRET=your_random_secret_key_here
+```
+
+Start the backend:
+```bash
+npm start
+```
+
+### 3. Set up Frontend
+Open a new terminal:
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### 4. Access the Application
+Open browser: **http://localhost:4200**
+
+Default login credentials:
+| Username | Password | Role |
+|----------|----------|------|
+| admin | admin123 | Administrator |
+| idot | idot123 | Regular User |
+
+## Project Structure
 
 ```
 equipment-cost-management-system/
 ├── backend/
 │   ├── app/
-│   │   ├── config/          # Configuration files
-│   │   ├── controllers/      # API controllers
-│   │   ├── models/          # MongoDB models
-│   │   ├── routes/          # API routes
-│   │   └── middlewares/     # Auth & validation
-│   ├── server.js            # Server entry point
-│   ├── app.js               # Express app setup
-│   └── .env                 # Environment variables (create this)
+│   │   ├── config/         # Database and auth configuration
+│   │   ├── controllers/    # API logic (auth, data, fuel-price, user)
+│   │   ├── models/         # MongoDB schemas (user, role, data, fuel)
+│   │   ├── routes/         # API routes
+│   │   └── middlewares/    # Authentication & validation
+│   ├── server.js           # Server entry point
+│   ├── app.js              # Express app setup
+│   └── package.json        # Backend dependencies
 │
 └── frontend/
     ├── src/
     │   ├── app/
-    │   │   ├── _services/   # API services
-    │   │   ├── calculator/  # Calculator component
-    │   │   ├── equipment-details/  # Equipment details
-    │   │   └── ...          # Other components
-    │   └── assets/           # Static assets
-    └── angular.json
+    │   │   ├── _services/      # API services
+    │   │   ├── calculator/     # Calculator component
+    │   │   ├── equipment-details/   # Equipment details
+    │   │   ├── equipment-list/      # Equipment listing
+    │   │   ├── login/          # Login component
+    │   │   └── ...             # Other components
+    │   └── assets/             # Static assets
+    ├── angular.json            # Angular configuration
+    └── package.json            # Frontend dependencies
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/signin` - User login
-- `POST /api/auth/signout` - User logout
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/auth/signup | Register new user |
+| POST | /api/auth/signin | Login |
+| POST | /api/auth/signout | Logout |
 
 ### Equipment Data
-- `GET /api/test/model-data/:year` - Get equipment by year
-- `GET /api/test/contractor-data/:contractor` - Get equipment by contractor
-- `PUT /api/test/editEquipment` - Edit equipment
-- `POST /api/test/addequipment` - Add new equipment
-- `GET /api/test/years` - Get all available years
-- `GET /api/test/contractors` - Get all contractors
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/test/years | Get all available years |
+| GET | /api/test/all/:year | Get equipment data for a year |
+| PUT | /api/test/edit | Edit equipment |
+| POST | /api/test/addequipment | Add new equipment |
 
 ### Calculator
-- `POST /api/test/savemodel` - Save calculator model
-- `GET /api/test/savedmodels` - Get all saved models
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/test/savemodel | Save calculator model |
+| GET | /api/test/savedmodels | Get saved models |
 
 ### Fuel Prices
-- `GET /api/fuel/fuel-price` - Get fuel price by county/quarter/type
-- `GET /api/fuel/fuel-metadata` - Get counties and quarters
-- `POST /api/fuel/update` - Update fuel price
-- `POST /api/fuel/bulk-upload` - Bulk upload fuel prices
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/fuel/fuel-price | Get fuel price |
+| GET | /api/fuel/fuel-metadata | Get counties and quarters |
 
-## 🧮 Key Calculations
+## Key Calculations
 
 ### Ownership Costs (Monthly)
-- Depreciation
-- Capital Cost
-- Overhead
-- Overhaul Labor
-- Overhaul Parts
+- Depreciation Ownership Cost
+- Capital Cost (Cost of Facilities)
+- Overhead Ownership Cost
+- Overhaul Labor Ownership Cost
+- Overhaul Parts Ownership Cost
 
-**Total Ownership Cost (Hourly)** = Sum of all ownership costs / 176
+**Total Ownership Cost (Hourly)** = Sum of all 5 monthly costs ÷ 176
 
 ### Operating Costs (Hourly)
-- Field Labor
-- Field Parts
-- Ground Engaging Component
-- Lube
-- Fuel (by Horse Power)
-- Tire Costs
+- Field Labor Operating Cost
+- Field Parts Operating Cost
+- Ground Engaging Component Cost
+- Lube Operating Cost
+- Fuel by Horse Power Operating Cost
+- Tire Costs Operating Cost
 
 **Total Operating Cost** = Sum of all operating costs
 
-### Calculator Rates
-- **FHWA Rate** = ((Unadjusted Monthly Cost × Model Rate% × Regional Rate%) / 176) + Operating Cost
-- **Standby Rate** = ((Unadjusted Monthly Cost × Model Rate% × Regional Rate%) / 176) × Operating Cost Multiplier
+### FHWA Rate Formula
+```
+FHWA Rate = (Monthly Ownership Cost × Model Rate% × Regional Rate%) ÷ 176 + Operating Cost
+```
 
-## 🚀 Deployment
+## Troubleshooting
 
-### Frontend Deployment to S3
+### Port already in use
+```bash
+# Kill process on port 8083 (backend)
+lsof -ti:8083 | xargs kill -9
 
-1. Build the Angular application:
-   ```bash
-   cd frontend
-   npm run build
-   ```
+# Kill process on port 4200 (frontend)
+lsof -ti:4200 | xargs kill -9
+```
 
-2. Sync to S3:
-   ```bash
-   aws s3 sync static/ s3://your-bucket-name --delete
-   ```
+### MongoDB connection error
+- Verify your `MONGODB_URI` in `.env`
+- Ensure your IP is whitelisted in MongoDB Atlas
 
-3. Invalidate CloudFront cache (if using CloudFront):
-   ```bash
-   aws cloudfront create-invalidation --distribution-id YOUR_DIST_ID --paths "/*"
-   ```
+### Module not found
+```bash
+# Delete node_modules and reinstall
+rm -rf node_modules
+npm install
+```
 
-### Backend Deployment to EC2
+## Detailed Setup Guide
 
-1. Build and transfer files:
-   ```bash
-   scp -r backend/* user@ec2-ip:~/backend/
-   ```
+See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for comprehensive setup instructions.
 
-2. SSH into EC2 and restart:
-   ```bash
-   ssh user@ec2-ip
-   cd backend
-   pm2 restart app
-   ```
+## License
 
-## 📚 Documentation
-
-- [Complete Flow Documentation](./FLOW_DOCUMENTATION.md) - Detailed code flow from equipment selection to calculator
-- [Project Flowchart](./PROJECT_FLOWCHART.md) - Visual representation of application architecture and flows
-- [Git Security Guide](./GIT_SECURITY_GUIDE.md) - Security best practices for git repository
-
-## 🔒 Security
-
-- **Never commit** `.env` files
-- **Never commit** files containing passwords or API keys
-- Use environment variables for all sensitive data
-- See [GIT_SECURITY_GUIDE.md](./GIT_SECURITY_GUIDE.md) for details
-
-## 🧪 Technologies Used
-
-- **Frontend**: Angular 15, TypeScript, Bootstrap, Angular Material
-- **Backend**: Node.js, Express.js, MongoDB, Mongoose
-- **Authentication**: JWT, bcryptjs, cookie-session
-- **Deployment**: AWS S3, CloudFront, EC2
-- **Database**: MongoDB Atlas
-
-## 📝 License
-
-This project is proprietary software.
-
-## 👥 Author
-
-Created for equipment cost management and calculation.
-
-## 🤝 Contributing
-
-This is a private project. For contributions or questions, please contact the project owner.
+This project is for educational purposes.
 
 ---
 
-**Note**: Make sure to set up your `.env` file with proper credentials before running the application.
-
+**Note**: Remember to create the `.env` file with your MongoDB credentials before running the backend.

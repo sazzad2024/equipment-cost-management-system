@@ -4,8 +4,7 @@ import { Observable } from 'rxjs';
 import { StorageService } from './storage.service';
 import { map } from 'rxjs/operators';
 
-//const AUTH_API = 'http://localhost:8083/api/auth/';
-const AUTH_API = 'http://18.208.245.47:8083/api/auth/';
+const AUTH_API = 'http://localhost:8083/api/auth/';
 //const ROLE_API = 'http://localhost:8082/api/user/role'; // Added API for fetching user role
 const httpOptions = {
   headers: new HttpHeaders({ 'Content-Type': 'application/json' })

@@ -12,18 +12,16 @@ app.use(express.static(path));
 
 const corsOptions = {
   origin: [
-    "http://localhost:4200",
-    "https://idot-project-beta.vercel.app",
-    "http://idot-frontend-1758593939.s3-website-us-east-1.amazonaws.com",
-    "https://dj42lwp4p3ce5.cloudfront.net"
+    "http://localhost:4200"
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 };
 
+// Apply CORS for all routes and ensure OPTIONS preflight uses same options
 app.use(cors(corsOptions));
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
@@ -42,7 +40,7 @@ const db = require("./app/models");
 const Role = db.role;
 
 db.mongoose
-  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Successfully connected to MongoDB.");
     initial();

@@ -705,7 +705,7 @@ exports.editEquipment = async (req, res) => {
     const collectionName = contractor ? `contractor-${contractor}` : year.toString();
     const collection = mongoose.connection.db.collection(collectionName);
     const currentYear = (await mongoose.connection.db.collection('currentyear').findOne({})).currentyear;
-    const recalculatedEditedEquipment = calculateDefaultValues(editedEquipment, currentYear, year);
+    const recalculatedEditedEquipment = await calculateDefaultValues(editedEquipment, currentYear, year);
     const newEquipment = { ...recalculatedEditedEquipment };
     delete newEquipment._id;
     const updatedEquipment = await collection.findOneAndUpdate(
@@ -735,7 +735,7 @@ exports.addNewEquipment = async (req, res) => {
     const currentYearDoc = await mongoose.connection.db.collection('currentyear').findOne({});
     const latestYear = currentYearDoc.currentyear;
 
-    const calculatedEquipment = calculateDefaultValues(equipment, latestYear, modelYear);
+    const calculatedEquipment = await calculateDefaultValues(equipment, latestYear, modelYear);
     await collection.insertOne(calculatedEquipment);
 
     res.status(201).send({ message: "Equipment added successfully", data: calculatedEquipment });
@@ -833,7 +833,7 @@ exports.generate2025Data = async (req, res) => {
       };
 
       // Recalculate all costs including overhead
-      const calculatedEquipment = calculateDefaultValues(newEquipment, newYear, newYear);
+      const calculatedEquipment = await calculateDefaultValues(newEquipment, newYear, newYear);
       bulkInserts.push(calculatedEquipment);
     }
 
@@ -871,11 +871,14 @@ exports.generateNextYearEquipData = async (req, res) => {
         if (existingData.length > 0) {
             return res.status(409).json({ message: `Equipment data for year ${nextYear} already exists` });
         }
-        const nextYearEquipmentData = currentYearEquipmentData.map(equipment => {
+        // FIX: calculateDefaultValues is now async, use Promise.all
+        const nextYearEquipmentData = await Promise.all(currentYearEquipmentData.map(async equipment => {
             const nextYrEquipment = { ...equipment };
             nextYrEquipment.Original_price = Math.round(equipment.Original_price * (1 + priceIncreaseRate / 100));
-            return calculateDefaultValues(nextYrEquipment, nextYear, nextYear);
-        });
+            // Set Model Year to newYear to match Excel
+            nextYrEquipment['Model Year'] = parseInt(nextYear);
+            return await calculateDefaultValues(nextYrEquipment, nextYear, nextYear);
+        }));
         // console.log(`Created year ${nextYear} data`);
         // console.log(nextYearEquipmentData)
         await mongoose.connection.db.collection(nextYear).insertMany(nextYearEquipmentData);
@@ -916,15 +919,16 @@ exports.generateNextYearEquipData = async (req, res) => {
       return;
     }
   
-    const operations = equipmentsForYear.map(equipment => {
-      const updatedEquipment = calculateDefaultValues(equipment, year, currYear);
+    // FIX: calculateDefaultValues is now async, use Promise.all
+    const operations = await Promise.all(equipmentsForYear.map(async equipment => {
+      const updatedEquipment = await calculateDefaultValues(equipment, year, currYear);
       return {
         updateOne: {
           filter: { _id: equipment._id },
           update: { $set: updatedEquipment }
         }
       };
-    });
+    }));
   
     if (operations.length) {
       await yearCollection.bulkWrite(operations, { ordered: false });
@@ -936,39 +940,48 @@ exports.generateNextYearEquipData = async (req, res) => {
   
 
 
-const calculateDefaultValues = (equipment, latestYear, ModelYear) => {
+const calculateDefaultValues = async (equipment, latestYear, ModelYear) => {
   if (!equipment) return; 
   equipment = transformEquipmentData(equipment);
+  
+  // Use current calendar year (2026) for depreciation calculation
+  const depreciationYear = new Date().getFullYear();
+  
   const denominator = (equipment.Economic_Life_in_months / 12);
-  equipment.Current_Market_Year_Resale_Value = Math.round(
+  // Full precision - no rounding on Current_Market_Year_Resale_Value
+  equipment.Current_Market_Year_Resale_Value = 
     denominator ?
         Math.max(
-            equipment.Original_price - ((latestYear - ModelYear) * equipment.Original_price * (1 - equipment.Salvage_Value)) / denominator,
+            equipment.Original_price - ((depreciationYear - ModelYear) * equipment.Original_price * (1 - equipment.Salvage_Value)) / denominator,
             equipment.Original_price * equipment.Salvage_Value
         )
-        : 0
-  );
+        : 0;
   equipment.Usage_rate = equipment.Monthly_use_hours / 176; // Use full precision, no rounding
 
   const fuelType = equipment['Reimbursable Fuel_type (1 diesel, 2 gas, 3 other)'] || 0;
   const fuelMultiplier = (Math.abs(fuelType - 1) < 0.0001) ? 0.04 : (Math.abs(fuelType - 2) < 0.0001) ? 0.06 : 0;
-  //taking the latest fuel unit price 
-  const fuelCostsDoc =  mongoose.connection.db.collection('fuelcosts').findOne({});
-    // Determine the fuel type and set the unit price accordingly
-  switch(equipment['Reimbursable Fuel_type (1 diesel, 2 gas, 3 other)']) {
-      case 1: // Diesel
-        equipment.Fuel_unit_price = fuelCostsDoc.diesel_price;
-        break;
-      case 2: // Gasoline
-        equipment.Fuel_unit_price = fuelCostsDoc.gasoline_price;
-        break;
-      case 3: // Other
-        equipment.Fuel_unit_price = fuelCostsDoc.other;
-        break;
-      default:
-        // Set a default or throw an error if needed
-        break;
+  
+  // FIX: await the fuelcosts query (was returning Promise → undefined → NaN)
+  const fuelCostsDoc = await mongoose.connection.db.collection('fuelcosts').findOne({});
+  
+  // Determine the fuel type and set the unit price accordingly
+  if (fuelCostsDoc) {
+    switch(equipment['Reimbursable Fuel_type (1 diesel, 2 gas, 3 other)']) {
+        case 1: // Diesel
+          equipment.Fuel_unit_price = fuelCostsDoc.diesel_price || 0;
+          break;
+        case 2: // Gasoline
+          equipment.Fuel_unit_price = fuelCostsDoc.gasoline_price || 0;
+          break;
+        case 3: // Other
+          equipment.Fuel_unit_price = fuelCostsDoc.other || 0;
+          break;
+        default:
+          equipment.Fuel_unit_price = equipment.Fuel_unit_price || 0;
+          break;
     }
+  }
+  
   equipment.Tire_Costs_Operating_cost_Hourly = (equipment.Cost_of_A_New_Set_of_Tires && equipment.Tire_Life_Hours) ? equipment.Cost_of_A_New_Set_of_Tires / equipment.Tire_Life_Hours : 0;
 
   equipment.Lube_Operating_cost_Hourly = equipment.Lube_Operating_cost_Hourly || 0;
@@ -983,7 +996,10 @@ const calculateDefaultValues = (equipment, latestYear, ModelYear) => {
   equipment.Field_Labor_Operating_cost_Hourly = equipment.Annual_Field_Labor_Hours * equipment.Hourly_Wage / 12 / equipment.Monthly_use_hours;
   equipment.Field_Parts_Operating_cost_Hourly = equipment.Annual_Field_Repair_Parts_and_misc_supply_parts_Cost_rate * equipment.Original_price / 12 / equipment.Monthly_use_hours;
   equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly = equipment.Annual_Ground_Engaging_Component_rate * equipment.Original_price / 12 / equipment.Monthly_use_hours;
-  equipment.Fuel_by_horse_power_Operating_cost_Hourly = fuelMultiplier * equipment.Horse_power * equipment.Fuel_unit_price;
+  
+  // FIX: Multiply by Adjustment_for_fuel_cost (default 1) to match Excel formula
+  const fuelAdjustment = equipment.Adjustment_for_fuel_cost || 1;
+  equipment.Fuel_by_horse_power_Operating_cost_Hourly = fuelMultiplier * equipment.Horse_power * equipment.Fuel_unit_price * fuelAdjustment;
 
   equipment.Total_operating_cost = equipment.Field_Labor_Operating_cost_Hourly + equipment.Field_Parts_Operating_cost_Hourly + equipment.Ground_Engaging_Component_Cost_Operating_cost_Hourly + equipment.Lube_Operating_cost_Hourly + equipment.Fuel_by_horse_power_Operating_cost_Hourly + equipment.Tire_Costs_Operating_cost_Hourly;
   equipment.Total_cost_recovery = equipment.Total_ownership_cost_hourly + equipment.Total_operating_cost;
@@ -1348,7 +1364,7 @@ exports.exportEquipmentData = async (req, res) => {
         };
 
         // Use the existing calculateDefaultValues function with 2025 as latest year
-        const recalculatedEquipment = calculateDefaultValues(correctedEquipment, targetLatestYear, modelYear);
+        const recalculatedEquipment = await calculateDefaultValues(correctedEquipment, targetLatestYear, modelYear);
 
         bulkOps.push({
           updateOne: {

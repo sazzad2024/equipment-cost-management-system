@@ -99,8 +99,9 @@ if (!this.equipment) {
     this.ModelYear =
       this.isContractor && this.equipment
         ? this.equipment['Model Year']
-        : history.state.modelYear;
-    this.currYear = history.state.currYear;
+        : (history.state.modelYear || this.equipment?.['Model Year'] || new Date().getFullYear());
+    // Use current calendar year (2026) as fallback for depreciation calculation
+    this.currYear = history.state.currYear || new Date().getFullYear();
     this.isAdmin = this.userRole = user.roles.includes('ROLE_ADMIN');
     //this.selectedQuarter = history.state.county || this.storageService.getItem('selectedQuarter') || 'Not Selected';
     this.selectedCounty = history.state.county || this.storageService.getItem('selectedCounty') || 'Not Selected';
@@ -152,10 +153,8 @@ if (!this.equipment) {
         Salvage_Value_string: String(this.equipment.Salvage_Value)
       });
       
-      // Only recalculate if calculated fields are missing, otherwise preserve DB values
-      if (!this.equipment.Depreciation_Ownership_cost_Monthly && !this.equipment.Total_ownership_cost_hourly) {
-        this.calculateDefaultValues();
-      }
+      // Always recalculate to ensure consistency between individual costs and totals
+      this.calculateDefaultValues();
     }
   }
   
@@ -262,11 +261,16 @@ if (!this.equipment) {
     if (this.equipment) {
       this.calculateTotalOperatingCost();
       console.log('out side claculating...');
-      if (this.equipment !== undefined && this.ModelYear !== undefined) {
-        console.log('calculating...');
+      // Fallback ModelYear if not set
+      if (!this.ModelYear) {
+        this.ModelYear = this.equipment['Model Year'] || new Date().getFullYear();
+      }
+      if (this.equipment !== undefined) {
+        console.log('calculating... ModelYear:', this.ModelYear);
         const denominator = this.equipment.Economic_Life_in_months / 12;
 
-        this.equipment.Current_Market_Year_Resale_Value = Math.round(
+        // Full precision - no rounding on Current_Market_Year_Resale_Value
+        this.equipment.Current_Market_Year_Resale_Value = this.toFourDecimals(
           denominator
             ? Math.max(
                 this.equipment.Original_price -
@@ -359,6 +363,8 @@ if (!this.equipment) {
 
 
 
+        // Multiply by Adjustment for fuel cost (default 1) to match Excel formula
+        const fuelAdjustment = this.equipment['Adjustment for fuel cost'] || 1;
         this.equipment.Fuel_by_horse_power_Operating_cost_Hourly = this.toFourDecimals(
           (Number(this.selectedFuelType) === 1
             ? 0.04
@@ -366,7 +372,8 @@ if (!this.equipment) {
             ? 0.06
             : 0) *
           this.equipment.Horse_power *
-          this.equipment.Fuel_unit_price
+          this.equipment.Fuel_unit_price *
+          fuelAdjustment
         );
         
 
@@ -496,7 +503,7 @@ if (!this.equipment) {
               </style>
             </head>
             <body>
-              <h2>Edit Equipment Details</h2>
+              <h2>Equipment Details</h2>
               <table>
                 <tr>
                   <td>Category:</td>

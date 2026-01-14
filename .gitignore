@@ -273,3 +273,66 @@ middleware-explained.md
 # frontend/README.md (keep if needed)
 # backend/README.md (keep if needed)
 
+# ============================================
+# Project-specific exclusions (helper scripts, docs, temp files)
+# ============================================
+
+# Root level helper scripts (not needed to run the project)
+check-db-values.js
+check-excel-sheets.js
+check-excel-values.js
+convert-excel-to-json.js
+extract-2025-data.js
+fix-correct-decimal-values.js
+fix-with-exact-excel-values.js
+fix-with-excel-values.js
+remove-caterpillar-2025.js
+update-decimal-precision.js
+replacements.txt
+tool-data.json
+
+# Documentation files (optional - not needed to run)
+all-confusing-parts-explained.md
+complete-application-flow.md
+database-check-explained.md
+database-connection-explained.md
+FLOW_DOCUMENTATION.md
+frontend-architecture-diagram.md
+frontend-backend-mapping.md
+GIT_SECURITY_GUIDE.md
+login-code-for-kids.md
+login-flow-code-analysis.md
+middleware-explained.md
+PROJECT_FLOWCHART.md
+SECURITY_IMPROVEMENTS_REPORT.md
+
+# Deployment packages
+*.zip
+backend-apprunner.zip
+backend-deployment-fixed.zip
+backend/backend-deployment.zip
+
+# Excel data file (keep if needed for data import)
+# Tool without 2026 Aug 9.xlsx
+
+# Backend helper/deployment scripts
+backend/check-user.js
+backend/clear-models.js
+backend/clear-saved-models.js
+backend/deploy-to-ec2.sh
+backend/deploy.sh
+backend/generate-all-years.js
+backend/test-server.js
+backend/upload-data.js
+backend/upload-fuel-data.js
+backend/vercel.json
+backend/Procfile
+backend/node-js-express-login-example-mongodb-flow.png
+
+# Frontend build output and extra files
+frontend/static/
+frontend/angular-15-jwt-auth@0.0.0
+frontend/ng
+frontend/angular-15-jwt-authentication-authorization-flow.png
+frontend/angular-15-jwt-authentication.png
+

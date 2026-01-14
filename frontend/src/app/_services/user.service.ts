@@ -4,8 +4,7 @@ import { Observable } from 'rxjs';
 import { Equipment } from '../board-admin/board-admin.component';
 import { StorageService } from './storage.service';
 
-const API_URL = 'http://18.208.245.47:8083/api/test/';
-//const API_URL = 'http://localhost:8083/api/test/';
+const API_URL = 'http://localhost:8083/api/test/';
 
 
 @Injectable({

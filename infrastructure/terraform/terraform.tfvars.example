@@ -28,7 +28,7 @@ backend_image  = "equipment-backend:latest"
 # Get these from your backend/.env file
 
 # MongoDB Atlas connection string
-mongodb_uri = "mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/test"
+mongodb_uri = "insert-your-mongodb-uri-here"
 
 # Cookie secret for session management
-cookie_secret = "your-secret-key-here-make-it-long-and-random"
+cookie_secret = "insert-your-cookie-secret-here"

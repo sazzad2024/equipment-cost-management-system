@@ -1,0 +1,71 @@
+# ===========================================
+# Docker Compose for Local Development
+# ===========================================
+
+services:
+  # Frontend - Angular served via Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Backend - Node.js/Express API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:8083/api/test/all', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # SonarQube for code quality (optional - for local testing)
+  sonarqube:
+    image: sonarqube:lts-community
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - app-network
+    profiles:
+      - tools
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:

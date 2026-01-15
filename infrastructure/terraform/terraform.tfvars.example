@@ -1,0 +1,34 @@
+# ===========================================
+# Terraform Variables - Example Configuration
+# ===========================================
+# 
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# IMPORTANT: Never commit terraform.tfvars to version control!
+# ===========================================
+
+# Application namespace
+namespace = "equipment-system"
+
+# Environment: dev, staging, or prod
+environment = "dev"
+
+# Number of pod replicas
+frontend_replicas = 2
+backend_replicas  = 2
+
+# Docker images (use local images for Minikube)
+frontend_image = "equipment-frontend:latest"
+backend_image  = "equipment-backend:latest"
+
+# ===========================================
+# SENSITIVE VALUES - Update these!
+# ===========================================
+# Get these from your backend/.env file
+
+# MongoDB Atlas connection string
+mongodb_uri = "mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/test"
+
+# Cookie secret for session management
+cookie_secret = "your-secret-key-here-make-it-long-and-random"
